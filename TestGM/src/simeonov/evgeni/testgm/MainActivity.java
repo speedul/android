@@ -3,6 +3,8 @@ package simeonov.evgeni.testgm;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,6 +20,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -77,9 +81,13 @@ public class MainActivity extends Activity {
 
 			LatLng myPastLocation = null;
 			LatLng myLocation = null;
+			String currAddress = null;
 
 			@Override
 			public void onMyLocationChange(Location arg0) {
+				
+				currAddress =  getCompleteAddressString(arg0.getLatitude(), arg0
+						.getLongitude());
 
 				myLocation = new LatLng(arg0.getLatitude() + delta, arg0
 						.getLongitude() + delta);
@@ -92,6 +100,7 @@ public class MainActivity extends Activity {
 						+ "\n"
 						+ String.format("Lng: %.4f", myLocation.longitude)
 						+ "\n"
+						+ "Your current address is: " + currAddress
 						+ sOut);
 
 				if (current_position != null) {
@@ -155,6 +164,30 @@ public class MainActivity extends Activity {
 		
 		delta += step;
 	}
+	
+	private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
+        String strAdd = "";
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
+            if (addresses != null) {
+                Address returnedAddress = addresses.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+
+                for (int i = 0; i < returnedAddress.getMaxAddressLineIndex(); i++) {
+                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
+                }
+                strAdd = strReturnedAddress.toString();
+                Log.w("My Current loction address", "" + strReturnedAddress.toString());
+            } else {
+                Log.w("My Current loction address", "No Address returned!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w("My Current loction address", "Canont get Address!");
+        }
+        return strAdd;
+    }
 
 	@Override
 	protected void onPause() {
